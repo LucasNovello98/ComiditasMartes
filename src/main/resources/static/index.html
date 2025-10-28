@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de comidas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #fafafa; padding: 20px; }
+        h1, h2 { color: #333; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #eee; }
+        button { margin-left: 5px; cursor: pointer; }
+        .form-section { padding: 10px; border: 1px solid #ccc; background: #f9f9f9; margin-top: 20px; }
+        .form-section label { display: block; margin-bottom: 5px; }
+        .form-section input[type=text], .form-section input[type=date] { width: 100%; margin-bottom: 10px; padding: 5px; }
+        fieldset { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<h1>Gestión de comidas</h1>
+
+<div class="form-section" id="nueva-comida-section">
+    <h2>Agregar nueva comida</h2>
+    <form id="form-nueva-comida">
+        <label>Fecha: <input type="date" id="nueva-fecha" required></label>
+        <label>Lugar: <input type="text" id="nueva-lugar" required></label>
+        <label>Comida: <input type="text" id="nueva-comida" required></label>
+        <label>Cocinero: <input type="text" id="nueva-cocinero" required></label>
+        <fieldset>
+            <legend>Participantes</legend>
+            <div id="checkbox-participantes-nueva"></div>
+        </fieldset>
+        <button type="submit">Agregar comida</button>
+    </form>
+</div>
+
+<table id="tabla-comidas">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Lugar</th>
+        <th>Comida</th>
+        <th>Cocinero</th>
+        <th>Participantes</th>
+        <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div class="form-section" id="edit-section" style="display:none;">
+    <h2>Editar Comida <span id="edit-comida-nombre"></span></h2>
+    <form id="edit-form">
+        <label>Fecha: <input type="date" id="edit-fecha" required></label>
+        <label>Lugar: <input type="text" id="edit-lugar" required></label>
+        <label>Comida: <input type="text" id="edit-comida" required></label>
+        <label>Cocinero: <input type="text" id="edit-cocinero" required></label>
+        <fieldset>
+            <legend>Participantes</legend>
+            <div id="checkbox-participantes"></div>
+        </fieldset>
+    </form>
+    <button id="guardar-cambios">Guardar cambios</button>
+    <button id="cancelar-edicion">Cancelar</button>
+</div>
+
+<script>
+    let comidas = [];
+    let participantes = [];
+    let comidaEditando = null;
+
+    // Cargar participantes
+    function cargarParticipantes() {
+        fetch("http://localhost:8080/participantes/lista-participantes")
+          .then(res => res.json())
+          .then(data => {
+              participantes = data;
+              renderCheckboxParticipantes();
+          })
+          .catch(err => console.error("Error cargando participantes:", err));
+    }
+
+    // Renderiza checkboxes para nueva comida
+    function renderCheckboxParticipantes() {
+        const container = document.getElementById("checkbox-participantes-nueva");
+        container.innerHTML = "";
+        participantes.forEach(p => {
+            const label = document.createElement("label");
+            label.innerHTML = `<input type="checkbox" value="${p.id}"> ${p.nombre}`;
+            container.appendChild(label);
+        });
+    }
+
+    // Cargar comidas
+    function cargarComidas() {
+        fetch("http://localhost:8080/comidas/")
+          .then(res => res.json())
+          .then(data => {
+              comidas = data;
+              const tbody = document.querySelector("#tabla-comidas tbody");
+              tbody.innerHTML = "";
+              data.forEach(c => {
+                  const participantesHTML = c.participantes
+                      ? c.participantes.map(p => p.nombre).join(", ")
+                      : "";
+
+                  const fila = document.createElement("tr");
+                  fila.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.fecha}</td>
+                    <td>${c.lugar}</td>
+                    <td>${c.comida}</td>
+                    <td>${c.cocinero}</td>
+                    <td>${participantesHTML}</td>
+                    <td>
+                        <button class="btn-editar" data-id="${c.id}">Editar</button>
+                        <button class="btn-eliminar" data-id="${c.id}">Eliminar comida</button>
+                    </td>
+                  `;
+                  tbody.appendChild(fila);
+              });
+
+              document.querySelectorAll(".btn-editar").forEach(btn => {
+                  btn.addEventListener("click", () => abrirEdicion(btn.getAttribute("data-id")));
+              });
+              document.querySelectorAll(".btn-eliminar").forEach(btn => {
+                  btn.addEventListener("click", () => eliminarComida(btn.getAttribute("data-id")));
+              });
+          })
+          .catch(err => console.error("Error cargando comidas:", err));
+    }
+
+    // Eliminar comida
+    function eliminarComida(comidaId) {
+        fetch(`http://localhost:8080/comidas/eliminar/${comidaId}`, { method: "DELETE" })
+          .then(() => cargarComidas());
+    }
+
+    // Crear nueva comida
+    document.getElementById("form-nueva-comida").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const checkboxes = document.querySelectorAll("#checkbox-participantes-nueva input[type=checkbox]");
+        const idsParticipantes = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+
+        const nuevaComida = {
+            fecha: document.getElementById("nueva-fecha").value,
+            lugar: document.getElementById("nueva-lugar").value,
+            comida: document.getElementById("nueva-comida").value,
+            cocinero: document.getElementById("nueva-cocinero").value
+        };
+
+        // Crear comida
+        fetch("http://localhost:8080/comidas/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nuevaComida)
+        }).then(res => res.json())
+          .then(c => {
+              // Agregar participantes seleccionados
+              const promises = idsParticipantes.map(pid =>
+                  fetch(`http://localhost:8080/comidas/${c.id}/participante/${pid}`, { method: "POST" })
+              );
+              return Promise.all(promises);
+          })
+          .then(() => {
+              document.getElementById("form-nueva-comida").reset();
+              cargarComidas();
+          })
+          .catch(err => console.error("Error creando nueva comida:", err));
+    });
+
+    // Abrir edición
+    function abrirEdicion(comidaId) {
+        comidaEditando = comidas.find(c => c.id == comidaId);
+        document.getElementById("edit-comida-nombre").textContent = comidaEditando.comida;
+        document.getElementById("edit-fecha").value = comidaEditando.fecha;
+        document.getElementById("edit-lugar").value = comidaEditando.lugar;
+        document.getElementById("edit-comida").value = comidaEditando.comida;
+        document.getElementById("edit-cocinero").value = comidaEditando.cocinero;
+
+        const container = document.getElementById("checkbox-participantes");
+        container.innerHTML = "";
+        participantes.forEach(p => {
+            const esta = comidaEditando.participantes?.some(pa => pa.id === p.id) || false;
+            const label = document.createElement("label");
+            label.innerHTML = `<input type="checkbox" value="${p.id}" ${esta ? "checked" : ""}> ${p.nombre}`;
+            container.appendChild(label);
+        });
+
+        document.getElementById("edit-section").style.display = "block";
+    }
+
+    // Guardar cambios
+    document.getElementById("guardar-cambios").addEventListener("click", () => {
+        const checkboxes = document.querySelectorAll("#checkbox-participantes input[type=checkbox]");
+        const idsParticipantes = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+
+        const updatedComida = {
+            fecha: document.getElementById("edit-fecha").value,
+            lugar: document.getElementById("edit-lugar").value,
+            comida: document.getElementById("edit-comida").value,
+            cocinero: document.getElementById("edit-cocinero").value
+        };
+
+        // Actualizar comida
+        fetch(`http://localhost:8080/comidas/${comidaEditando.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedComida)
+        }).then(() => {
+            // Actualizar participantes
+            const promises = participantes.map(p => {
+                const esta = idsParticipantes.includes(p.id.toString());
+                if (esta) {
+                    return fetch(`http://localhost:8080/comidas/${comidaEditando.id}/participante/${p.id}`, { method: "POST" });
+                } else {
+                    return fetch(`http://localhost:8080/comidas/eliminar/comida/${comidaEditando.id}/participante/${p.id}`, { method: "DELETE" });
+                }
+            });
+            return Promise.all(promises);
+        }).then(() => {
+            document.getElementById("edit-section").style.display = "none";
+            cargarComidas();
+        }).catch(err => console.error("Error guardando cambios:", err));
+    });
+
+    document.getElementById("cancelar-edicion").addEventListener("click", () => {
+        document.getElementById("edit-section").style.display = "none";
+    });
+
+    // Inicialización
+    cargarParticipantes();
+    cargarComidas();
+</script>
+</body>
+</html>
