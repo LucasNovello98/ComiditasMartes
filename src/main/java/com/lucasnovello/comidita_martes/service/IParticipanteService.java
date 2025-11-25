@@ -1,23 +1,26 @@
 package com.lucasnovello.comidita_martes.service;
 
-import com.lucasnovello.comidita_martes.model.Participante;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import com.lucasnovello.comidita_martes.dto.ParticipanteRequestDTO;
+import com.lucasnovello.comidita_martes.dto.ParticipanteResponseDTO;
 import java.util.List;
-
 
 public interface IParticipanteService{
 
     // traer participantes
-    public List<Participante> getParticipantes();
-
-    // guardar participante
-    public Participante saveParticipante(Participante participante);
-
-    // borrar participante por id
-    public void deleteParticipante(Long id);
+    List<ParticipanteResponseDTO> getParticipantes();
 
     // buscar participante por id
-    public Participante findParticipante(Long id);
+    ParticipanteResponseDTO findParticipante(Long id);
+
+    // guardar participante
+    ParticipanteResponseDTO createParticipante(ParticipanteRequestDTO participanteDto);
+
+    // borrar participante por id
+    void deleteParticipante(Long id);
+
+    // actualizar datos participante
+    ParticipanteResponseDTO updateParticipante(ParticipanteRequestDTO participanteDto,
+                                               Long id);
+
 
 }

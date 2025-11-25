@@ -1,27 +1,31 @@
 package com.lucasnovello.comidita_martes.service;
 
 
-import com.lucasnovello.comidita_martes.model.Comida;
-
+import com.lucasnovello.comidita_martes.dto.ComidaRequestDTO;
+import com.lucasnovello.comidita_martes.dto.ComidaResponseDTO;
+import com.lucasnovello.comidita_martes.model.Participante;
 import java.util.List;
 
 public interface IComidaService {
 
     // traer todas las comidas
-    public List<Comida> getComidas();
+    List<ComidaResponseDTO> getComidas();
 
     // guardar nueva comida
-    public Comida saveComida(Comida comida);
+    ComidaResponseDTO createComida(ComidaRequestDTO dto);
 
     // eliminar comida por id
-    public void deleteComida(Long id);
+    void deleteComida(Long id);
 
     // buscar comida por id
-    public Comida findComida(Long id);
+    ComidaResponseDTO findComida(Long id);
 
-    public Comida addParticipante(Long comidaID, Long participanteId);
+    // actualizar comida
+    ComidaResponseDTO updateComida(ComidaRequestDTO dto, Long id);
 
-    public Comida removeParticipante(Long comidaId, Long participanteId);
+    ComidaResponseDTO addParticipante(Long comidaId, Long participanteId);
+
+    ComidaResponseDTO removeParticipante(Long comidaId, Long participanteId);
 
     void cargarDesdeCSV(String rutaCSV);
 }

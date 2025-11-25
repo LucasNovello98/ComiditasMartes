@@ -1,40 +1,45 @@
 package com.lucasnovello.comidita_martes.controller;
 
-import com.lucasnovello.comidita_martes.model.Participante;
+import com.lucasnovello.comidita_martes.dto.ParticipanteRequestDTO;
+import com.lucasnovello.comidita_martes.dto.ParticipanteResponseDTO;
 import com.lucasnovello.comidita_martes.service.IParticipanteService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/participantes")
+@RequestMapping("api/participantes")
 public class ParticipanteController {
 
-    @Autowired
-    private IParticipanteService participanteService;
+    private final IParticipanteService participanteService;
 
-    @GetMapping ("/lista-participantes")
-    public ResponseEntity<List<Participante>> getParticipantes() {
+    public ParticipanteController(IParticipanteService participanteService) {
+        this.participanteService = participanteService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ParticipanteResponseDTO>> getParticipantes() {
         return ResponseEntity.ok(participanteService.getParticipantes());
     }
 
     // 201 Created
-    @PostMapping ("/crear")
-    public ResponseEntity<Participante> saveParticipante(@RequestBody Participante participante) {
-        return ResponseEntity.status(201).body(participanteService.saveParticipante(participante));
+    @PostMapping
+    public ResponseEntity<ParticipanteResponseDTO> saveParticipante(@Valid @RequestBody ParticipanteRequestDTO participanteDto) {
+        return ResponseEntity.status(201).body(participanteService
+                .createParticipante(participanteDto));
     }
 
-    @DeleteMapping ("/eliminar-participante/{id}")
+    @DeleteMapping ("/eliminar/{id}")
     public ResponseEntity<Void> deleteParticipante(@PathVariable Long id) {
         participanteService.deleteParticipante(id);
         return ResponseEntity.noContent().build(); // devuelve el codigo y con .build() crea el ResponseEntity
     }
 
     @GetMapping ("/buscar/{id}")
-    public ResponseEntity<Participante> findParticipante (@PathVariable Long id) {
-        Participante participante = participanteService.findParticipante(id);
+    public ResponseEntity<ParticipanteResponseDTO> findParticipante (@PathVariable Long id) {
+        ParticipanteResponseDTO participante = participanteService.findParticipante(id);
         if (participante != null) {
             return ResponseEntity.ok(participante);
         } else {
@@ -42,10 +47,12 @@ public class ParticipanteController {
         }
     }
 
-
-
-
-
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<ParticipanteResponseDTO> updateParticipante(@Valid @RequestBody ParticipanteRequestDTO participanteDto,
+                                                                      @PathVariable Long id) {
+        ParticipanteResponseDTO participante = participanteService.updateParticipante(participanteDto, id);
+        return ResponseEntity.ok(participante);
+    }
 
 
 }

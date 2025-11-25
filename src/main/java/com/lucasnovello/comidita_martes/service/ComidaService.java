@@ -1,14 +1,15 @@
 package com.lucasnovello.comidita_martes.service;
 
+import com.lucasnovello.comidita_martes.dto.ComidaRequestDTO;
+import com.lucasnovello.comidita_martes.dto.ComidaResponseDTO;
+import com.lucasnovello.comidita_martes.mapper.ComidaMapper;
 import com.lucasnovello.comidita_martes.model.Comida;
 import com.lucasnovello.comidita_martes.model.Participante;
 import com.lucasnovello.comidita_martes.repository.IComidaRepository;
 import com.lucasnovello.comidita_martes.repository.IParticipanteRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -18,61 +19,100 @@ import java.util.List;
 @Service
 public class ComidaService implements IComidaService{
 
-    @Autowired
-    private IComidaRepository comidaRepository;
-    @Autowired
-    private IParticipanteRepository participanteRepository;
+    private final IComidaRepository comidaRepository;
+    private final IParticipanteRepository participanteRepository;
 
-    @Override
-    public List<Comida> getComidas() {
-        return comidaRepository.findAll();
+    public ComidaService(IComidaRepository comidaRepository,
+                         IParticipanteRepository participanteRepository) {
+        this.comidaRepository = comidaRepository;
+        this.participanteRepository = participanteRepository;
     }
 
+    // traer todas las comidas
     @Override
-    public Comida saveComida(Comida comida) {
-        return comidaRepository.save(comida);
+    public List<ComidaResponseDTO> getComidas() {
+        return comidaRepository.findAll()
+                .stream()
+                .map(ComidaMapper::toResponse)
+                .toList();
     }
 
+    // traer una comida por Id
+    @Override
+    public ComidaResponseDTO findComida(Long id) {
+        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
+        return ComidaMapper.toResponse(comida);
+    }
+
+    // crear una comida
+    @Override
+    public ComidaResponseDTO createComida(ComidaRequestDTO dto) {
+        List<Participante> participantes = dto.getParticipantesIds() != null ?
+                participanteRepository.findAllById(dto.getParticipantesIds()) : new ArrayList<>();
+
+        Comida comida = ComidaMapper.toEntity(dto, participantes);
+        Comida comidaCreada = comidaRepository.save(comida);
+        return ComidaMapper.toResponse(comidaCreada);
+    }
+
+    // actualizar una comida
+    @Override
+    public ComidaResponseDTO updateComida(ComidaRequestDTO dto, Long id) {
+        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
+
+        comida.setFecha(dto.getFecha());
+        comida.setLugar(dto.getLugar());
+        comida.setComida(dto.getComida());
+        comida.setCocinero(dto.getCocinero());
+
+        List<Participante> participantes = dto.getParticipantesIds() != null ? participanteRepository.findAllById(dto.getParticipantesIds())
+                : new ArrayList<>();
+
+        comida.setParticipantes(participantes);
+
+        Comida updatedComida = comidaRepository.save(comida);
+
+        return ComidaMapper.toResponse(updatedComida);
+    }
+
+    // eliminar una comida
     @Override
     public void deleteComida(Long id) {
+        if (!comidaRepository.existsById(id)) {
+            throw new RuntimeException("No se encontro la comida");
+        }
         comidaRepository.deleteById(id);
     }
 
+    // agregar participante a una comida
     @Override
-    public Comida findComida(Long id) {
-        return comidaRepository.findById(id).orElse(null);
-    }
-
-    public Comida addParticipante(Long comidaId, Long participanteId) {
+    public ComidaResponseDTO addParticipante(Long comidaId, Long participanteId) {
         Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
-        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new RuntimeException("Participante no encontrado"));
+        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new RuntimeException("Participante no encontrada"));
 
         if (!comida.getParticipantes().contains(participante)) {
             comida.getParticipantes().add(participante);
         }
 
-        return comidaRepository.save(comida);
+        Comida comidaActualizada = comidaRepository.save(comida);
+        return ComidaMapper.toResponse(comidaActualizada);
     }
 
+    // eliminar participante de una comida
     @Override
-    public Comida removeParticipante(Long comidaId, Long participanteId) {
-
-        // buscar comida por id
+    public ComidaResponseDTO removeParticipante(Long comidaId, Long participanteId) {
         Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
-
-        // buscar participante por id
         Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new RuntimeException("Participante no encontrada"));
 
-        // verificar que la comida tenga al participante y lo remueve si esta
-        comida.getParticipantes().remove(participante);
+        if (comida.getParticipantes().contains(participante)) {
+            comida.getParticipantes().remove(participante);
+        }
 
-        // guarda los cambios
-        return comidaRepository.save(comida);
+        Comida comidaActualizada = comidaRepository.save(comida);
+        return ComidaMapper.toResponse(comidaActualizada);
     }
 
-
-    // metodo para cargar CSV
-
+    // cargar excel
     public void cargarDesdeCSV(String rutaArchivo) {
 
             try (CSVReader reader = new CSVReader(new FileReader(rutaArchivo))) {
@@ -168,7 +208,7 @@ public class ComidaService implements IComidaService{
                 System.err.println("❌ Error leyendo el archivo CSV.");
             }
         }
-    }
+}
 
 
 
