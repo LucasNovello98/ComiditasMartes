@@ -3,6 +3,7 @@ package com.lucasnovello.comidita_martes.service;
 
 import com.lucasnovello.comidita_martes.dto.ParticipanteRequestDTO;
 import com.lucasnovello.comidita_martes.dto.ParticipanteResponseDTO;
+import com.lucasnovello.comidita_martes.exception.ParticipanteNotFoundException;
 import com.lucasnovello.comidita_martes.mapper.ParticipanteMapper;
 import com.lucasnovello.comidita_martes.model.Participante;
 import com.lucasnovello.comidita_martes.repository.IParticipanteRepository;
@@ -30,7 +31,7 @@ public class ParticipanteService implements IParticipanteService{
     @Override
     public ParticipanteResponseDTO findParticipante(Long id) {
         Participante participante = participanteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Participante no encontrado"));
+                .orElseThrow(() -> new ParticipanteNotFoundException(id));
         return ParticipanteMapper.toResponse(participante);
     }
 
@@ -44,7 +45,7 @@ public class ParticipanteService implements IParticipanteService{
     @Override
     public void deleteParticipante(Long id) {
         if (!participanteRepository.existsById(id)) {
-            throw new RuntimeException("No se encontro el participate");
+            throw new ParticipanteNotFoundException(id);
         }
         participanteRepository.deleteById(id);
     }
@@ -52,7 +53,7 @@ public class ParticipanteService implements IParticipanteService{
     @Override
     public ParticipanteResponseDTO updateParticipante(ParticipanteRequestDTO participanteDto, Long id) {
         Participante participante = participanteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Participante no encontrado"));
+                .orElseThrow(() -> new ParticipanteNotFoundException(id));
 
         participante.setNombre(participanteDto.getNombre());
 

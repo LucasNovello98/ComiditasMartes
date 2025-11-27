@@ -2,6 +2,8 @@ package com.lucasnovello.comidita_martes.service;
 
 import com.lucasnovello.comidita_martes.dto.ComidaRequestDTO;
 import com.lucasnovello.comidita_martes.dto.ComidaResponseDTO;
+import com.lucasnovello.comidita_martes.exception.ComidaNotFoundException;
+import com.lucasnovello.comidita_martes.exception.ParticipanteNotFoundException;
 import com.lucasnovello.comidita_martes.mapper.ComidaMapper;
 import com.lucasnovello.comidita_martes.model.Comida;
 import com.lucasnovello.comidita_martes.model.Participante;
@@ -40,7 +42,7 @@ public class ComidaService implements IComidaService{
     // traer una comida por Id
     @Override
     public ComidaResponseDTO findComida(Long id) {
-        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
+        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new ComidaNotFoundException(id));
         return ComidaMapper.toResponse(comida);
     }
 
@@ -58,7 +60,7 @@ public class ComidaService implements IComidaService{
     // actualizar una comida
     @Override
     public ComidaResponseDTO updateComida(ComidaRequestDTO dto, Long id) {
-        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
+        Comida comida = comidaRepository.findById(id).orElseThrow(() -> new ComidaNotFoundException(id));
 
         comida.setFecha(dto.getFecha());
         comida.setLugar(dto.getLugar());
@@ -79,7 +81,7 @@ public class ComidaService implements IComidaService{
     @Override
     public void deleteComida(Long id) {
         if (!comidaRepository.existsById(id)) {
-            throw new RuntimeException("No se encontro la comida");
+            throw new ComidaNotFoundException(id);
         }
         comidaRepository.deleteById(id);
     }
@@ -87,8 +89,8 @@ public class ComidaService implements IComidaService{
     // agregar participante a una comida
     @Override
     public ComidaResponseDTO addParticipante(Long comidaId, Long participanteId) {
-        Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
-        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new RuntimeException("Participante no encontrada"));
+        Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new ComidaNotFoundException(comidaId));
+        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new ParticipanteNotFoundException(participanteId));
 
         if (!comida.getParticipantes().contains(participante)) {
             comida.getParticipantes().add(participante);
@@ -101,12 +103,10 @@ public class ComidaService implements IComidaService{
     // eliminar participante de una comida
     @Override
     public ComidaResponseDTO removeParticipante(Long comidaId, Long participanteId) {
-        Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new RuntimeException("Comida no encontrada"));
-        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new RuntimeException("Participante no encontrada"));
+        Comida comida = comidaRepository.findById(comidaId).orElseThrow(() -> new ComidaNotFoundException(comidaId));
+        Participante participante = participanteRepository.findById(participanteId).orElseThrow(() -> new ParticipanteNotFoundException(participanteId));
 
-        if (comida.getParticipantes().contains(participante)) {
-            comida.getParticipantes().remove(participante);
-        }
+        comida.getParticipantes().remove(participante);
 
         Comida comidaActualizada = comidaRepository.save(comida);
         return ComidaMapper.toResponse(comidaActualizada);
