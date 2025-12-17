@@ -1,11 +1,14 @@
-FROM eclipse-temurin:21-jdk
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
 COPY . .
 
-RUN chmod +x mvnw
+RUN mvn clean package -Dskiptest
 
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-CMD ["java", "-jar", "target/comidita-martes-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "target/comidita-martes-0.0.1-SNAPSHOT.jar"]
