@@ -23,7 +23,7 @@ public class DataLoader implements CommandLineRunner {
 
         if (comidaRepository.count() == 0) {
             // ruta del CSV
-            String rutaCSV = "src/main/resources/comidas.csv";
+            String rutaCSV = "app/src/main/resources/comidas.csv";
 
             // llamar al metodo para cargar datos
             comidaService.cargarDesdeCSV(rutaCSV);
