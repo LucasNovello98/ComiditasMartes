@@ -1,7 +1,9 @@
-📌 Comidita Martes – API REST
+📌 ComiditasMartes – API REST
 
-Comidita Martes es un proyecto personal desarrollado para mí y mi grupo de amigos.
-La API está construida en Java 21 con Spring Boot, y permite gestionar comidas y participantes, asignarlos, quitarlos y administrar toda la información de forma simple.
+ComiditasMartes es una API REST desarrollada como proyecto personal para gestionar comidas y participantes dentro de un grupo de amigos.
+Permite crear comidas, administrar participantes y asociarlos entre sí de forma sencilla.
+
+El proyecto está desarrollado en Java 21 con Spring Boot, utiliza MySQL como base de datos y se encuentra dockerizado, pudiendo ser desplegado en un entorno Linux y administrado remotamente mediante SSH.
 
 🚀 Tecnologías utilizadas
 
@@ -15,7 +17,9 @@ Spring Data JPA
 
 Hibernate
 
-MySQL / PostgreSQL (según configuración)
+MySQL
+
+Docker & Docker Compose
 
 Maven
 
@@ -50,6 +54,10 @@ Agregar participantes a una comida
 
 Eliminar participantes de una comida
 
+📥 Carga inicial de datos
+
+Carga automática de datos desde un archivo CSV al iniciar la aplicación (DataLoader)
+
 🛠 Estructura del proyecto
 src/
 ├── controller/     # Endpoints REST
@@ -57,21 +65,53 @@ src/
 ├── repository/     # Acceso a base de datos
 ├── dto/            # Request / Response DTOs
 ├── mapper/         # Conversión entre entidades y DTOs
-└── model/          # Entidades JPA
+├── model/          # Entidades JPA
+└── config/         # Configuración y DataLoader
 
-▶ Ejecución del proyecto
+🐳 Ejecución con Docker (recomendado)
 1️⃣ Clonar el repositorio
 git clone https://github.com/LucasNovello98/ComiditasMartes.git
+cd ComiditasMartes
 
-2️⃣ Configurar tu application.properties o application.yml
-3️⃣ Ejecutar con Maven
+2️⃣ Levantar la aplicación con Docker Compose
+docker compose up -d --build
+
+
+Esto levantará:
+
+La API Spring Boot
+
+La base de datos MySQL con persistencia de datos
+
+La aplicación quedará disponible en:
+
+http://localhost:8080
+
+🖥 Deploy en Linux y administración remota
+
+El proyecto puede ejecutarse en una máquina Linux como servidor, y administrarse remotamente desde otro equipo mediante SSH.
+
+Ejemplo:
+
+ssh usuario@IP_DEL_SERVIDOR
+cd ComiditasMartes
+docker compose up -d
+
+▶ Ejecución sin Docker (modo local)
+Requisitos
+
+Java 21
+
+Maven 3+
+
+Base de datos configurada (MySQL)
+
+Pasos
 mvn spring-boot:run
 
-📘 Documentación (Swagger)
+📘 Documentación de la API (Swagger)
 
-Si activaste OpenAPI:
-
-URL:
+Si OpenAPI está habilitado:
 
 http://localhost:8080/swagger-ui.html
 
@@ -81,8 +121,4 @@ Java 21
 
 Maven 3+
 
-Base de datos configurada (MySQL, PostgreSQL, etc.)
-
-📄 Licencia
-
-Proyecto personal y de práctica – uso libre.
+Docker y Docker Compose (opcional pero recomendado)
