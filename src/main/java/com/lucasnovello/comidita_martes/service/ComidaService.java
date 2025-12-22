@@ -11,9 +11,12 @@ import com.lucasnovello.comidita_martes.repository.IComidaRepository;
 import com.lucasnovello.comidita_martes.repository.IParticipanteRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,10 +118,16 @@ public class ComidaService implements IComidaService{
     // cargar excel
     public void cargarDesdeCSV(String rutaArchivo) {
 
-            try (CSVReader reader = new CSVReader(new FileReader(rutaArchivo))) {
+            try {
+                ClassPathResource resource = new ClassPathResource("comidas.csv");
+                InputStream inputStream = resource.getInputStream();
+
+                CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
 
                 String[] encabezados = reader.readNext(); // leer la primera fila (nombres)
                 if (encabezados == null) return;
+
+
 
                 // 0. Crear todos los participantes a partir de los encabezados
                 for (int i = 4; i < encabezados.length; i++) {
