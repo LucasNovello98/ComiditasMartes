@@ -4,19 +4,19 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql-comidita
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: comidita_martes
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
       MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
   app:
     build: .
     container_name: comidita-app
+    restart: unless-stopped
     depends_on:
       - mysql
     ports:
