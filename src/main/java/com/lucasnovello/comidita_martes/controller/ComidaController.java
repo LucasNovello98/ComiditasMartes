@@ -23,7 +23,7 @@ public class ComidaController {
         return ResponseEntity.ok(comidaService.getComidas());
     }
 
-    @GetMapping ("/buscar/{id}")
+    @GetMapping ("/{id}")
     public ResponseEntity<ComidaResponseDTO> findComida (@PathVariable Long id) {
         ComidaResponseDTO comida = comidaService.findComida(id);
         if (comida != null) {
@@ -46,7 +46,7 @@ public class ComidaController {
     }
 
     @PostMapping ("/{comidaId}/participante/{participanteId}")
-    public ResponseEntity<ComidaResponseDTO> addParticipante(@Valid @PathVariable Long comidaId, @PathVariable Long participanteId) {
+    public ResponseEntity<ComidaResponseDTO> addParticipante(@PathVariable Long comidaId, @PathVariable Long participanteId) {
         try {
             ComidaResponseDTO comidaActualiazda = comidaService.addParticipante(comidaId, participanteId);
             return ResponseEntity.ok(comidaActualiazda);
